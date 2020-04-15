@@ -14,9 +14,8 @@ router.get('/', (req, res) => {
   // do your magic!
 });
 
-router.get('/:id', validateUserId, (req, res) => {
-  return user.getById(req.params.id)
-    .then(result => res.status(200).json({ user: result }))
+router.get('/:id', validateUserId, async (req, res) => {
+  console.log(req.user)
 });
 
 router.get('/:id/posts', validateUserId, (req, res) => {
@@ -40,9 +39,15 @@ function validateUserId(req, res, next) {
     value: !!id
   };
 
+  // * IF INVALID ID THEN 400, ELSE CHECK IF USER EXIST FOR DATA RETURN.
   if (!!id === false) {
     return res.status(400).json({ error })
-  } else next()
+  } else user.getById(req.params.id)
+    .then(result => res.status(200).json({ user: result }))
+    .catch(err => res.status(400).json({ err }))
+
+  // * CONTINUE
+  next();
 }
 
 function validateUser(req, res, next) {
