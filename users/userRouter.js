@@ -1,12 +1,16 @@
 const express = require('express');
-const user = require('./userDb');
+const Users = require('./userDb');
 const router = express.Router();
 
-router.post('/', (req, res) => {
-  // do your magic!
+router.post('/', validateUser, (req, res) => {
+  const { body } = req;
+
+  return Users.insert(body)
+    .then(user => res.status(201).json(user))
+    .catch(err => res.status(500).json({ err }))
 });
 
-router.post('/:id/posts', validateUserId, (req, res) => {
+router.post('/:id/posts', [validateUserId, validatePost], (req, res) => {
   console.log('req obj ' + req)
 });
 
@@ -26,7 +30,7 @@ router.delete('/:id', validateUserId, (req, res) => {
   console.log('req obj ' + req)
 });
 
-router.put('/:id', validateUserId, (req, res) => {
+router.put('/:id', [validateUserId, validateUser], (req, res) => {
   console.log('req obj ' + req)
 });
 
@@ -42,7 +46,7 @@ function validateUserId(req, res, next) {
   // * IF INVALID ID THEN 400, ELSE CHECK IF USER EXIST FOR DATA RETURN.
   if (!!id === false) {
     return res.status(400).json({ error })
-  } else user.getById(req.params.id)
+  } else Users.getById(req.params.id)
     .then(result => res.status(200).json({ user: result }))
     .catch(err => res.status(400).json({ err }))
 
@@ -51,11 +55,21 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  const { body } = req;
+  const err = { message: "missing user data" };
+
+  if (!!body === false || !!body.name === false) {
+    return res.status(400).json({ err })
+  } else next()
 }
 
 function validatePost(req, res, next) {
-  // do your magic!
+  const { body } = req;
+  const err = { message: "missing post data" };
+
+  if (!!body === false || !!body.text === false) {
+    return res.status(400).json({ err })
+  } else next()
 }
 
 module.exports = router;
